@@ -56,9 +56,32 @@ st.sidebar.header("Input Parameters")
 st.sidebar.subheader("🔍 Search Location")
 search_query = st.sidebar.text_input("Enter Precise Location", placeholder="e.g. City Center, Gwalior")
 
-# Default Gwalior coordinates
-DEFAULT_LAT = 26.2183
-DEFAULT_LON = 78.1828
+st.sidebar.write("📍 **Use Device GPS:**")
+try:
+    from streamlit_geolocation import streamlit_geolocation
+    location = streamlit_geolocation()
+    if location and location.get('latitude') is not None and location.get('longitude') is not None:
+        gps_lat = location['latitude']
+        gps_lon = location['longitude']
+        if st.session_state.get('last_gps_lat') != gps_lat or st.session_state.get('last_gps_lon') != gps_lon:
+            st.session_state.default_lat = gps_lat
+            st.session_state.default_lon = gps_lon
+            st.session_state.last_gps_lat = gps_lat
+            st.session_state.last_gps_lon = gps_lon
+            st.sidebar.success("📍 GPS Location Applied!")
+except ImportError:
+    st.sidebar.warning("streamlit-geolocation not installed. Run `pip install streamlit-geolocation`.")
+except Exception as e:
+    st.sidebar.error("Error fetching GPS location.")
+
+# Initialize session state for default coordinates
+if 'default_lat' not in st.session_state:
+    st.session_state.default_lat = 26.2183
+if 'default_lon' not in st.session_state:
+    st.session_state.default_lon = 78.1828
+
+DEFAULT_LAT = st.session_state.default_lat
+DEFAULT_LON = st.session_state.default_lon
 
 def get_estimated_area(lat_val, lon_val):
     # Deterministic pseudo-random area based on coordinates
@@ -85,6 +108,8 @@ if search_query:
             if data and "features" in data and len(data["features"]) > 0:
                 feature = data["features"][0]
                 coords = feature["geometry"]["coordinates"] # [lon, lat]
+                st.session_state.default_lon = coords[0]
+                st.session_state.default_lat = coords[1]
                 DEFAULT_LON = coords[0]
                 DEFAULT_LAT = coords[1]
                 
