@@ -40,3 +40,4 @@ if __name__ == "__main__":
     finally:
         print("\n[Krishna GeoSolar AI] Server exited.")
         input("Press Enter to close this window...")
+
